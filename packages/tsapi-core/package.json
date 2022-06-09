@@ -1,0 +1,19 @@
+{
+  "name": "@oxc/tsapi-core",
+  "packageManager": "yarn@3.2.1",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.3",
+    "zod": "^3.17.3"
+  }
+}
