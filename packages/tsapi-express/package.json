@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "packageManager": "yarn@3.2.1",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepack": "yarn build"
   },
   "dependencies": {
     "@oxc/tsapi-core": "workspace:^"

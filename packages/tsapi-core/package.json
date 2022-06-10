@@ -8,7 +8,8 @@
     "./*": "./lib/*.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepack": "yarn build"
   },
   "peerDependencies": {
     "zod": "^3.0.0"
