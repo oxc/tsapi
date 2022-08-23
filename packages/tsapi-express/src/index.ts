@@ -69,7 +69,6 @@ function createEndpointHandler<Endpoint extends ApiEndpoint<any>>(
       handler(args).then(
         (output) => {
           res.json(output);
-          next();
         },
         (err) => {
           if (!err) {
