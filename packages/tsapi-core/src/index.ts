@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { inferApi, inferFlatApi } from "./infer";
+import { inferApi, inferFlatApi } from "./infer.js";
 import { z, ZodObject } from "zod";
 
 type ParamsDefinition = z.AnyZodObject;

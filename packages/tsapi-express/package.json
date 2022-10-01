@@ -2,12 +2,18 @@
   "name": "@oxc/tsapi-express",
   "version": "0.0.1",
   "packageManager": "yarn@3.2.1",
+  "type": "module",
+  "module": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build"
   },
   "dependencies": {
-    "@oxc/tsapi-core": "workspace:^"
+    "@oxc/tsapi-core": "^0.0.1"
   },
   "peerDependencies": {
     "express": "^4.0.0",

@@ -2,7 +2,7 @@
   "name": "@oxc/tsapi-core",
   "version": "0.0.1",
   "packageManager": "yarn@3.2.1",
-  "main": "lib/index.js",
+  "type": "module",
   "exports": {
     ".": "./lib/index.js",
     "./*": "./lib/*.js"
