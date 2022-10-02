@@ -55,7 +55,7 @@ __metadata:
   resolution: "@oxc/tsapi-core@workspace:packages/tsapi-core"
   dependencies:
     typescript: ^4.7.3
-    zod: ^3.17.3
+    zod: ^3.19.1
   peerDependencies:
     zod: ^3.0.0
   languageName: unknown
@@ -1655,9 +1655,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.17.3":
-  version: 3.17.3
-  resolution: "zod@npm:3.17.3"
-  checksum: f74b5d8a307cbed734e7a4a7f57a0c6b0a2d5062adee25e86eceaa1bec606621d6861804130f53342dec2d6e77fe9365f3a5118d55c81688f69f3de5fd3e59af
+"zod@npm:^3.19.1":
+  version: 3.19.1
+  resolution: "zod@npm:3.19.1"
+  checksum: 56e420ea5845912324a8fc61833714a2aec84954e418b52660d76502183c6e62fef9447cbfa64349640c5ce190cf2c24267e006bb80f066183e2f3fa9fe11864
   languageName: node
   linkType: hard

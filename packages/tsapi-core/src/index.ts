@@ -11,9 +11,9 @@ type MergedParams<
   Params1 extends ParamsDefinition,
   Params2 extends ParamsDefinition
 > = z.ZodObject<
-  z.extendShape<Params1["_shape"], Params2["_shape"]>,
-  Params1["_unknownKeys"],
-  Params1["_catchall"]
+  z.extendShape<Params1["_def"]["shape"], ReturnType<Params2["_def"]["shape"]>>,
+  Params1["_def"]["unknownKeys"],
+  Params1["_def"]["catchall"]
 >;
 
 export type RouteOptions = {
