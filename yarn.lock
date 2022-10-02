@@ -46,7 +46,7 @@ __metadata:
   resolution: "@oxc/tsapi-client@workspace:packages/tsapi-client"
   dependencies:
     "@oxc/tsapi-core": ^0.0.1
-    typescript: ^4.7.3
+    typescript: ^4.8.4
   languageName: unknown
   linkType: soft
 
@@ -54,7 +54,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@oxc/tsapi-core@workspace:packages/tsapi-core"
   dependencies:
-    typescript: ^4.7.3
+    typescript: ^4.8.4
     zod: ^3.19.1
   peerDependencies:
     zod: ^3.0.0
@@ -68,7 +68,7 @@ __metadata:
     "@oxc/tsapi-core": ^0.0.1
     "@types/express": ^4.17.13
     express: ^4.18.1
-    typescript: ^4.7.3
+    typescript: ^4.8.4
   peerDependencies:
     express: ^4.0.0
     zod: ^3.0.0
@@ -81,7 +81,7 @@ __metadata:
   dependencies:
     "@yarnpkg/sdks": ^3.0.0-rc.7
     prettier: 2.6.2
-    typescript: ^4.7.3
+    typescript: ^4.8.4
   languageName: unknown
   linkType: soft
 
@@ -1589,23 +1589,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.7.3":
-  version: 4.7.3
-  resolution: "typescript@npm:4.7.3"
+"typescript@npm:^4.8.4":
+  version: 4.8.4
+  resolution: "typescript@npm:4.8.4"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: fd13a1ce53790a36bb8350e1f5e5e384b5f6cb9b0635114a6d01d49cb99916abdcfbc13c7521cdae2f2d3f6d8bc4a8ae7625edf645a04ee940588cd5e7597b2f
+  checksum: 3e4f061658e0c8f36c820802fa809e0fd812b85687a9a2f5430bc3d0368e37d1c9605c3ce9b39df9a05af2ece67b1d844f9f6ea8ff42819f13bcb80f85629af0
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.7.3#~builtin<compat/typescript>":
-  version: 4.7.3
-  resolution: "typescript@patch:typescript@npm%3A4.7.3#~builtin<compat/typescript>::version=4.7.3&hash=a1c5e5"
+"typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>":
+  version: 4.8.4
+  resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=a1c5e5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 137d18a77f52254a284960b16ab53d0619f57b69b5d585804b8413f798a1175ce3e774fb95e6a101868577aafe357d8fcfc9171f0dc9fc0c210e9ae59d107cc0
+  checksum: 563a0ef47abae6df27a9a3ab38f75fc681f633ccf1a3502b1108e252e187787893de689220f4544aaf95a371a4eb3141e4a337deb9895de5ac3c1ca76430e5f0
   languageName: node
   linkType: hard
 
