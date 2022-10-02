@@ -1,0 +1,21 @@
+{
+  "name": "@oxc/tsapi-client",
+  "version": "0.0.1",
+  "packageManager": "yarn@3.2.1",
+  "type": "module",
+  "module": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "yarn build"
+  },
+  "dependencies": {
+    "@oxc/tsapi-core": "^0.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.3"
+  }
+}

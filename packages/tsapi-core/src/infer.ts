@@ -1,5 +1,10 @@
 /* eslint-disable */
-import { ApiDefinition, ApiEndpoint, ApiType } from "./index.js";
+import {
+  ApiDefinition,
+  ApiEndpoint,
+  ApiEndpointMethods,
+  ApiType,
+} from "./index.js";
 import { z } from "zod";
 
 type inferZod<T> = T extends z.AnyZodObject
@@ -33,15 +38,25 @@ export type inferRoute<
   ? Api["routes"][Path]
   : never;
 
-export type inferEndpointParams<E extends ApiEndpoint<any>> = inferZod<
-  E["options"]["params"]
->;
-export type inferEndpointBody<E extends ApiEndpoint<any>> = inferZod<
-  E["options"]["body"]
->;
-export type inferEndpointQuery<E extends ApiEndpoint<any>> = inferZod<
-  E["options"]["query"]
->;
-export type inferEndpointOutput<E extends ApiEndpoint<any>> = inferZod<
-  E["options"]["output"]
->;
+type inferOptionalZodProperty<
+  E extends ApiEndpoint<any>,
+  P extends keyof E["options"]
+> = P extends keyof E["options"] ? inferZod<E["options"][P]> : undefined;
+
+export type inferEndpointParams<E extends ApiEndpoint<any>> =
+  inferOptionalZodProperty<E, "params">;
+export type inferEndpointBody<E extends ApiEndpoint<any>> =
+  inferOptionalZodProperty<E, "body">;
+export type inferEndpointQuery<E extends ApiEndpoint<any>> =
+  inferOptionalZodProperty<E, "query">;
+export type inferEndpointOutput<E extends ApiEndpoint<any>> =
+  inferOptionalZodProperty<E, "output">;
+
+export type inferEndpointPathsWithMethod<
+  Api extends ApiType,
+  Method extends ApiEndpointMethods
+> = {
+  [Path in keyof Api["endpoints"]]: Api["endpoints"][Path][Method] extends ApiEndpoint<any>
+    ? Path
+    : never;
+}[keyof Api["endpoints"] & string];

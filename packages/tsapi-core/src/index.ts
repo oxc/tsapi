@@ -415,8 +415,17 @@ export class ApiDefinition<
     return [...Object.keys(api.routes), ...Object.keys(api.endpoints)]
       .sort()
       .reduce((r, endpointName) => {
-        const element = api.routes[endpointName] || api.endpoints[endpointName];
-        r[endpointName] = element.dumpObj(flat);
+        const route = api.routes[endpointName];
+        if (route) {
+          r[endpointName] = route.dumpObj(flat);
+          return r;
+        }
+        const endpoints = api.endpoints[endpointName];
+        const dump: Record<string, string> = {};
+        for (const method of Object.keys(endpoints)) {
+          dump[method] = endpoints[method as keyof typeof endpoints]!.dumpObj();
+        }
+        r[endpointName] = dump;
         return r;
       }, {} as any);
   }
