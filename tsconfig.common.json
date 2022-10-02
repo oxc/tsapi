@@ -9,7 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "NodeNext",
     "lib": ["es2017"],
-    "target": "ES5",
+    "target": "ES6",
     "outDir": "./dist",
     "baseUrl": "./src"
   }
