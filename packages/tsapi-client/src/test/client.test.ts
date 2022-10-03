@@ -33,7 +33,7 @@ describe("api client", () => {
   });
 
   it("should call a simple get method without params", async () => {
-    await client.get("/users")({});
+    await client.get("/users")();
     expect(requestMaker.makeRequest).toHaveBeenCalledWith(
       "get",
       "/users",
