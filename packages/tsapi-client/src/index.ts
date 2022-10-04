@@ -1,8 +1,11 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {
   ApiDefinition,
   ApiEndpoint,
   ApiEndpointMethods,
   ApiType,
+  OutputDefinition,
 } from "@oxc/tsapi-core";
 import {
   inferEndpoint,
@@ -14,52 +17,106 @@ import {
 } from "@oxc/tsapi-core/infer";
 import { HasRequiredKeys } from "type-fest";
 
-export type RequestMaker = {
-  makeRequest<
-    Params extends Record<string, string>,
-    Query extends Record<string, string>,
-    Body,
-    Output
-  >(
-    method: string,
-    path: string,
-    params: Params | undefined,
-    query: Query | undefined,
-    body: Body | undefined
-  ): Promise<Output>;
-};
+type Params = Record<string, string>;
+type Query = Record<string, string>;
+type SyncMakeRequest = <P extends Params, Q extends Query, B, O>(
+  method: string,
+  path: string,
+  params: P | undefined,
+  query: Q | undefined,
+  body: B | undefined
+) => O;
+type AsyncMakeRequest = <P extends Params, Q extends Query, B, O>(
+  method: string,
+  path: string,
+  params: P | undefined,
+  query: Q | undefined,
+  body: B | undefined
+) => Promise<O>;
 
-// noinspection JSUnusedGlobalSymbols
-export class ApiClient<FlatApi extends ApiType> {
+export class SyncApiClient<FlatApi extends ApiType> {
   constructor(
     readonly def: ApiDefinition<any, FlatApi>,
-    private readonly requestMaker: RequestMaker
+    private readonly makeRequest: SyncMakeRequest
   ) {}
 
-  get = this.createEndpointCaller("get");
+  get = this.endpointCallerFactory("get");
 
-  post = this.createEndpointCaller("post");
+  post = this.endpointCallerFactory("post");
 
-  put = this.createEndpointCaller("put");
+  put = this.endpointCallerFactory("put");
 
-  patch = this.createEndpointCaller("patch");
+  patch = this.endpointCallerFactory("patch");
 
-  delete = this.createEndpointCaller("delete");
+  delete = this.endpointCallerFactory("delete");
 
-  private createEndpointCaller<Method extends ApiEndpointMethods>(
+  private endpointCallerFactory<Method extends ApiEndpointMethods>(
     method: Method
   ): <Path extends inferEndpointPathsWithMethod<FlatApi, Method>>(
     path: Path
-  ) => EndpointCaller<inferEndpoint<FlatApi, Path, Method>> {
-    return (path) =>
-      (async (args) => {
+  ) => SyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>> {
+    return (path) => {
+      const outputValidator = this.def.flatApi.endpoints[path][method]!.options
+        .output as OutputDefinition | undefined;
+      return ((args) => {
         const { params, query, body } = args ?? {};
-        return this.requestMaker.makeRequest(method, path, params, query, body);
-      }) as EndpointCaller<any>;
+        const result = this.makeRequest(method, path, params, query, body);
+        if (outputValidator) {
+          return outputValidator.parse(result);
+        }
+      }) as SyncEndpointCaller<any>;
+    };
   }
 }
 
-type EndpointCaller<Endpoint extends ApiEndpoint<any>> = HasRequiredKeys<
+export class AsyncApiClient<FlatApi extends ApiType> {
+  constructor(
+    readonly def: ApiDefinition<any, FlatApi>,
+    private readonly makeRequest: AsyncMakeRequest
+  ) {}
+
+  get = this.endpointCallerFactory("get");
+
+  post = this.endpointCallerFactory("post");
+
+  put = this.endpointCallerFactory("put");
+
+  patch = this.endpointCallerFactory("patch");
+
+  delete = this.endpointCallerFactory("delete");
+
+  private endpointCallerFactory<Method extends ApiEndpointMethods>(
+    method: Method
+  ): <Path extends inferEndpointPathsWithMethod<FlatApi, Method>>(
+    path: Path
+  ) => AsyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>> {
+    return (path) => {
+      const outputValidator = this.def.flatApi.endpoints[path][method]!.options
+        .output as OutputDefinition | undefined;
+
+      return (async (args) => {
+        const { params, query, body } = args ?? {};
+        const result = await this.makeRequest(
+          method,
+          path,
+          params,
+          query,
+          body
+        );
+        if (outputValidator) {
+          return await outputValidator.parseAsync(result);
+        }
+      }) as AsyncEndpointCaller<any>;
+    };
+  }
+}
+
+type SyncEndpointCaller<Endpoint extends ApiEndpoint<any>> = HasRequiredKeys<
+  EndpointArgs<Endpoint>
+> extends true
+  ? (args: EndpointArgs<Endpoint>) => inferEndpointOutput<Endpoint>
+  : (args?: EndpointArgs<Endpoint>) => inferEndpointOutput<Endpoint>;
+type AsyncEndpointCaller<Endpoint extends ApiEndpoint<any>> = HasRequiredKeys<
   EndpointArgs<Endpoint>
 > extends true
   ? (args: EndpointArgs<Endpoint>) => Promise<inferEndpointOutput<Endpoint>>

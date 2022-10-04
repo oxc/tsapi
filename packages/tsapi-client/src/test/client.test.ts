@@ -1,19 +1,20 @@
 import { defineApi } from "@oxc/tsapi-core";
 import { z } from "zod";
-import { ApiClient } from "../index.js";
-import { beforeEach, expect, jest } from "@jest/globals";
+import { AsyncApiClient, SyncApiClient } from "../index.js";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const booksApi = defineApi().get("/:bookId", {
   params: z.object({ bookId: z.string() }),
 });
 
-const otherApi = defineApi()
+const otherApi = defineApi((api) => api
   .get("/", {
     output: z.object({ message: z.string() }),
   })
-  .route("/books", booksApi);
+  .route("/books", booksApi)
+);
 
-const demoApi = defineApi()
+const demoApi = defineApi((api) => api
   .get("/users", {
     output: z.object({
       users: z.array(z.object({ id: z.number(), name: z.string() })),
@@ -59,22 +60,41 @@ const demoApi = defineApi()
       )
   )
   .route("/books", booksApi)
-  .route("/other", otherApi);
+  .route("/other", otherApi)
+);
 
-const requestMaker = {
-  makeRequest: jest.fn() as any,
-};
+const syncMakeRequest =
+  jest.fn<ConstructorParameters<typeof SyncApiClient>[1]>();
+const syncClient = new SyncApiClient(demoApi, syncMakeRequest as any);
+const asyncMakeRequest =
+  jest.fn<ConstructorParameters<typeof AsyncApiClient>[1]>();
+const asyncClient = new AsyncApiClient(demoApi, asyncMakeRequest as any);
 
-const client = new ApiClient(demoApi, requestMaker);
-
-describe("api client", () => {
+describe.each([
+  {
+    title: "sync api client",
+    // forcing the async type here otherwise Typescript inference will max out
+    client: syncClient as unknown as typeof asyncClient,
+    makeRequest: syncMakeRequest,
+    mockReturnValue: (value: any) => syncMakeRequest.mockReturnValue(value),
+  } as const,
+  {
+    title: "async api client",
+    client: asyncClient,
+    makeRequest: asyncMakeRequest,
+    mockReturnValue: (value: any) => asyncMakeRequest.mockResolvedValue(value),
+  } as const,
+] as const)("$title", ({ client, makeRequest, mockReturnValue }) => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should call a top-level get method without params", async () => {
+    mockReturnValue({
+      users: [],
+    });
     await client.get("/users")();
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/users",
       undefined,
@@ -87,7 +107,7 @@ describe("api client", () => {
     await client.get("/user/:id")({
       params: { id: 123 },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/user/:id",
       { id: 123 },
@@ -100,7 +120,7 @@ describe("api client", () => {
     await client.get("/entries")({
       query: { limit: 5 },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/entries",
       undefined,
@@ -113,12 +133,14 @@ describe("api client", () => {
     await client.post("/users")({
       body: { name: "John" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "post",
       "/users",
       undefined,
       undefined,
-      { name: "John" }
+      {
+        name: "John",
+      }
     );
   });
 
@@ -126,12 +148,14 @@ describe("api client", () => {
     await client.put("/entry/")({
       body: { name: "John" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "put",
       "/entry/",
       undefined,
       undefined,
-      { name: "John" }
+      {
+        name: "John",
+      }
     );
   });
 
@@ -139,7 +163,7 @@ describe("api client", () => {
     await client.get("/entry/:id/")({
       params: { id: 123 },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/entry/:id/",
       { id: 123 },
@@ -153,12 +177,14 @@ describe("api client", () => {
       params: { id: 123 },
       body: { name: "John" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "patch",
       "/entry/:id/",
       { id: 123 },
       undefined,
-      { name: "John" }
+      {
+        name: "John",
+      }
     );
   });
 
@@ -166,7 +192,7 @@ describe("api client", () => {
     await client.delete("/entry/:id/")({
       params: { id: 123 },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "delete",
       "/entry/:id/",
       { id: 123 },
@@ -179,7 +205,7 @@ describe("api client", () => {
     await client.get("/entry/:id/sub/:subid/")({
       params: { id: 123, subid: 456 },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/entry/:id/sub/:subid/",
       { id: 123, subid: 456 },
@@ -192,7 +218,7 @@ describe("api client", () => {
     await client.get("/books/:bookId")({
       params: { bookId: "123" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/books/:bookId",
       { bookId: "123" },
@@ -205,7 +231,7 @@ describe("api client", () => {
     await client.get("/other/books/:bookId")({
       params: { bookId: "123" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/other/books/:bookId",
       { bookId: "123" },
@@ -218,7 +244,7 @@ describe("api client", () => {
     await client.get("/entry/:id/books/:bookId")({
       params: { id: 123, bookId: "456" },
     });
-    expect(requestMaker.makeRequest).toHaveBeenCalledWith(
+    expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/entry/:id/books/:bookId",
       { id: 123, bookId: "456" },
