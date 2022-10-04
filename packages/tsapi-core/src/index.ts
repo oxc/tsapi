@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { inferApi, inferFlatApi } from "./infer.js";
 import { z, ZodObject } from "zod";
+import {Simplify} from "type-fest";
 
-type ParamsDefinition = z.AnyZodObject;
-type QueryDefinition = z.AnyZodObject;
-type BodyDefinition = z.AnyZodObject;
-type OutputDefinition = z.AnyZodObject;
+export type ParamsDefinition = z.AnyZodObject;
+export type QueryDefinition = z.AnyZodObject;
+export type BodyDefinition = z.AnyZodObject;
+export type OutputDefinition = z.AnyZodObject;
 
 type MergedParams<
   Params1 extends ParamsDefinition,
@@ -439,6 +440,13 @@ export class ApiDefinition<
   }
 }
 
-export function defineApi(): ApiDefinition<EmptyApiType, EmptyApiType> {
-  return ApiDefinition.empty();
+export function defineApi(): ApiDefinition<EmptyApiType, EmptyApiType>;
+export function defineApi<Api extends ApiType, FlatApi extends ApiType>(
+    api: BuilderOrDefinition<Api, FlatApi>,
+): ApiDefinition<Simplify<Api>, Simplify<FlatApi>>;
+export function defineApi<Api extends ApiType, FlatApi extends ApiType>(
+  api?: BuilderOrDefinition<Api, FlatApi>,
+): ApiDefinition<Api, FlatApi> {
+  if (api === undefined) return ApiDefinition.empty() as ApiDefinition<Api, FlatApi>;
+  return typeof api === "function" ? api(ApiDefinition.empty()) : api;
 }
