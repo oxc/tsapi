@@ -750,6 +750,8 @@ __metadata:
     type-fest: ^3.0.0
     typescript: ^4.8.4
     zod: ^3.19.1
+  peerDependencies:
+    zod: ^3.0.0
   languageName: unknown
   linkType: soft
 
