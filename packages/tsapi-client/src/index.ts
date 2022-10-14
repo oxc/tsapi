@@ -19,25 +19,32 @@ import { HasRequiredKeys } from "type-fest";
 
 type Params = Record<string, string>;
 type Query = Record<string, string>;
-type SyncMakeRequest = <P extends Params, Q extends Query, B, O>(
+type Body = {};
+export type SyncMakeRequest<Args extends {} = {}> = (
   method: string,
   path: string,
-  params: P | undefined,
-  query: Q | undefined,
-  body: B | undefined
-) => O;
-type AsyncMakeRequest = <P extends Params, Q extends Query, B, O>(
+  args: {
+    params: Params | undefined;
+    query: Query | undefined;
+    body: Body | undefined;
+    endpoint: ApiEndpoint<any>;
+  } & Args
+) => any;
+export type AsyncMakeRequest<Args extends {} = {}> = (
   method: string,
   path: string,
-  params: P | undefined,
-  query: Q | undefined,
-  body: B | undefined
-) => Promise<O>;
+  args: {
+    params: Params | undefined;
+    query: Query | undefined;
+    body: Body | undefined;
+    endpoint: ApiEndpoint<any>;
+  } & Args
+) => Promise<any>;
 
-export class SyncApiClient<FlatApi extends ApiType> {
+export class SyncApiClient<FlatApi extends ApiType, Args extends {}> {
   constructor(
     readonly def: ApiDefinition<any, FlatApi>,
-    private readonly makeRequest: SyncMakeRequest
+    private readonly makeRequest: SyncMakeRequest<Args>
   ) {}
 
   get = this.endpointCallerFactory("get");
@@ -54,25 +61,29 @@ export class SyncApiClient<FlatApi extends ApiType> {
     method: Method
   ): <Path extends inferEndpointPathsWithMethod<FlatApi, Method>>(
     path: Path
-  ) => SyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>> {
+  ) => SyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>, Args> {
     return (path) => {
-      const outputValidator = this.def.flatApi.endpoints[path][method]!.options
-        .output as OutputDefinition | undefined;
-      return ((args) => {
-        const { params, query, body } = args ?? {};
-        const result = this.makeRequest(method, path, params, query, body);
+      const endpoint = this.def.flatApi.endpoints[path][method]!;
+      const outputValidator = endpoint.options.output as
+        | OutputDefinition
+        | undefined;
+      return ((args: EndpointArgs<any, Args>) => {
+        const result = this.makeRequest(method, path, {
+          ...args,
+          endpoint,
+        } as any);
         if (outputValidator) {
           return outputValidator.parse(result);
         }
-      }) as SyncEndpointCaller<any>;
+      }) as any;
     };
   }
 }
 
-export class AsyncApiClient<FlatApi extends ApiType> {
+export class AsyncApiClient<FlatApi extends ApiType, Args extends {}> {
   constructor(
     readonly def: ApiDefinition<any, FlatApi>,
-    private readonly makeRequest: AsyncMakeRequest
+    private readonly makeRequest: AsyncMakeRequest<Args>
   ) {}
 
   get = this.endpointCallerFactory("get");
@@ -89,44 +100,53 @@ export class AsyncApiClient<FlatApi extends ApiType> {
     method: Method
   ): <Path extends inferEndpointPathsWithMethod<FlatApi, Method>>(
     path: Path
-  ) => AsyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>> {
+  ) => AsyncEndpointCaller<inferEndpoint<FlatApi, Path, Method>, Args> {
     return (path) => {
-      const outputValidator = this.def.flatApi.endpoints[path][method]!.options
-        .output as OutputDefinition | undefined;
+      const endpoint = this.def.flatApi.endpoints[path][method]!;
+      const outputValidator = endpoint.options.output as
+        | OutputDefinition
+        | undefined;
 
-      return (async (args) => {
-        const { params, query, body } = args ?? {};
-        const result = await this.makeRequest(
-          method,
-          path,
-          params,
-          query,
-          body
-        );
+      return (async (args: EndpointArgs<any, Args>) => {
+        const result = await this.makeRequest(method, path, {
+          ...args,
+          endpoint,
+        } as any);
         if (outputValidator) {
           return await outputValidator.parseAsync(result);
         }
-      }) as AsyncEndpointCaller<any>;
+      }) as any;
     };
   }
 }
 
-type SyncEndpointCaller<Endpoint extends ApiEndpoint<any>> = HasRequiredKeys<
-  EndpointArgs<Endpoint>
-> extends true
-  ? (args: EndpointArgs<Endpoint>) => inferEndpointOutput<Endpoint>
-  : (args?: EndpointArgs<Endpoint>) => inferEndpointOutput<Endpoint>;
-type AsyncEndpointCaller<Endpoint extends ApiEndpoint<any>> = HasRequiredKeys<
-  EndpointArgs<Endpoint>
-> extends true
-  ? (args: EndpointArgs<Endpoint>) => Promise<inferEndpointOutput<Endpoint>>
-  : (args?: EndpointArgs<Endpoint>) => Promise<inferEndpointOutput<Endpoint>>;
+type SyncEndpointCaller<
+  Endpoint extends ApiEndpoint<any>,
+  Args extends {}
+> = HasRequiredKeys<EndpointArgs<Endpoint, Args>> extends true
+  ? (args: EndpointArgs<Endpoint, Args>) => inferEndpointOutput<Endpoint>
+  : (args?: EndpointArgs<Endpoint, Args>) => inferEndpointOutput<Endpoint>;
+type AsyncEndpointCaller<
+  Endpoint extends ApiEndpoint<any>,
+  Args extends {}
+> = HasRequiredKeys<EndpointArgs<Endpoint, Args>> extends true
+  ? (
+      args: EndpointArgs<Endpoint, Args>
+    ) => Promise<inferEndpointOutput<Endpoint>>
+  : (
+      args?: EndpointArgs<Endpoint, Args>
+    ) => Promise<inferEndpointOutput<Endpoint>>;
 
-type EndpointArgs<Endpoint extends ApiEndpoint<any>> = Optionalify<{
-  params: inferEndpointParams<Endpoint>;
-  query: inferEndpointQuery<Endpoint>;
-  body: inferEndpointBody<Endpoint>;
-}>;
+type EndpointArgs<
+  Endpoint extends ApiEndpoint<any>,
+  Args extends {}
+> = Optionalify<
+  {
+    params: inferEndpointParams<Endpoint>;
+    query: inferEndpointQuery<Endpoint>;
+    body: inferEndpointBody<Endpoint>;
+  } & Omit<Args, "params" | "query" | "body" | "endpoint">
+>;
 
 type MandatoryPropertyKeys<T> = {
   [P in keyof T]: undefined extends T[P] ? never : P;

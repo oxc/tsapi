@@ -1,74 +1,80 @@
-import { defineApi } from "@oxc/tsapi-core";
+import { ApiEndpoint, defineApi } from "@oxc/tsapi-core";
 import { z } from "zod";
-import { AsyncApiClient, SyncApiClient } from "../index.js";
+import {
+  AsyncApiClient,
+  AsyncMakeRequest,
+  SyncApiClient,
+  SyncMakeRequest,
+} from "../index.js";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const booksApi = defineApi().get("/:bookId", {
   params: z.object({ bookId: z.string() }),
 });
 
-const otherApi = defineApi((api) => api
-  .get("/", {
-    output: z.object({ message: z.string() }),
-  })
-  .route("/books", booksApi)
+const otherApi = defineApi((api) =>
+  api
+    .get("/", {
+      output: z.object({ message: z.string() }),
+    })
+    .route("/books", booksApi)
 );
 
-const demoApi = defineApi((api) => api
-  .get("/users", {
-    output: z.object({
-      users: z.array(z.object({ id: z.number(), name: z.string() })),
-    }),
-  })
-  .post("/users", {
-    body: z.object({ name: z.string() }),
-    output: z.object({ id: z.number() }),
-  })
-  .get("/user/:id", {
-    params: z.object({ id: z.number() }),
-    output: z.object({ id: z.number(), name: z.string() }),
-  })
-  .get("/entries", {
-    query: z.object({
-      limit: z.number(),
-      since: z.number().optional(),
-    }),
-    output: z.object({}),
-  })
-  .route("/entry", (route) =>
-    route
-      .put("/", {
-        body: z.object({ name: z.string() }),
-        output: z.object({ id: z.number() }),
-      })
-      .routeWithParams(
-        "/:id",
-        { params: z.object({ id: z.number() }) },
-        (route) =>
-          route
-            .get("/", {
-              output: z.object({ id: z.number(), name: z.string() }),
-            })
-            .patch("/", {
-              body: z.object({ name: z.string() }),
-            })
-            .delete("/", {})
-            .get("/sub/:subid/", {
-              params: z.object({ subid: z.number() }),
-            })
-            .route("/books", booksApi)
-      )
-  )
-  .route("/books", booksApi)
-  .route("/other", otherApi)
+const demoApi = defineApi((api) =>
+  api
+    .get("/users", {
+      output: z.object({
+        users: z.array(z.object({ id: z.number(), name: z.string() })),
+      }),
+    })
+    .post("/users", {
+      body: z.object({ name: z.string() }),
+      output: z.object({ id: z.number() }),
+    })
+    .get("/user/:id", {
+      params: z.object({ id: z.number() }),
+      output: z.object({ id: z.number(), name: z.string() }),
+    })
+    .get("/entries", {
+      query: z.object({
+        limit: z.number(),
+        since: z.number().optional(),
+      }),
+      output: z.object({}),
+    })
+    .route("/entry", (route) =>
+      route
+        .put("/", {
+          body: z.object({ name: z.string() }),
+          output: z.object({ id: z.number() }),
+        })
+        .routeWithParams(
+          "/:id",
+          { params: z.object({ id: z.number() }) },
+          (route) =>
+            route
+              .get("/", {
+                output: z.object({ id: z.number(), name: z.string() }),
+              })
+              .patch("/", {
+                body: z.object({ name: z.string() }),
+              })
+              .delete("/", {})
+              .get("/sub/:subid/", {
+                params: z.object({ subid: z.number() }),
+                output: z.object({ fullId: z.string() }),
+              })
+              .route("/books", booksApi)
+        )
+    )
+    .route("/books", booksApi)
+    .route("/other", otherApi)
 );
 
-const syncMakeRequest =
-  jest.fn<ConstructorParameters<typeof SyncApiClient>[1]>();
-const syncClient = new SyncApiClient(demoApi, syncMakeRequest as any);
-const asyncMakeRequest =
-  jest.fn<ConstructorParameters<typeof AsyncApiClient>[1]>();
-const asyncClient = new AsyncApiClient(demoApi, asyncMakeRequest as any);
+const syncMakeRequest = jest.fn<SyncMakeRequest>();
+const syncClient = new SyncApiClient(demoApi, syncMakeRequest);
+const asyncMakeRequest = jest.fn<AsyncMakeRequest>();
+const asyncClient = new AsyncApiClient(demoApi, asyncMakeRequest);
 
 describe.each([
   {
@@ -94,82 +100,96 @@ describe.each([
       users: [],
     });
     await client.get("/users")();
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/users",
-      undefined,
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/users", {
+      params: undefined,
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it('should call a top-level get method with params"', async () => {
+    mockReturnValue({
+      id: 123,
+      name: "John",
+    });
+
     await client.get("/user/:id")({
       params: { id: 123 },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/user/:id",
-      { id: 123 },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/user/:id", {
+      params: { id: 123 },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a top-level get method with a query", async () => {
+    mockReturnValue({});
+
     await client.get("/entries")({
       query: { limit: 5 },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/entries",
-      undefined,
-      { limit: 5 },
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/entries", {
+      params: undefined,
+      query: { limit: 5 },
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a top-level post method with a body", async () => {
+    mockReturnValue({
+      id: 123,
+    });
+
     await client.post("/users")({
       body: { name: "John" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "post",
-      "/users",
-      undefined,
-      undefined,
-      {
+    expect(makeRequest).toHaveBeenCalledWith("post", "/users", {
+      params: undefined,
+      query: undefined,
+      body: {
         name: "John",
-      }
-    );
+      },
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a nested put method with a body", async () => {
+    mockReturnValue({
+      id: 123,
+    });
+
     await client.put("/entry/")({
       body: { name: "John" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "put",
-      "/entry/",
-      undefined,
-      undefined,
-      {
+    expect(makeRequest).toHaveBeenCalledWith("put", "/entry/", {
+      params: undefined,
+      query: undefined,
+      body: {
         name: "John",
-      }
-    );
+      },
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a nested get method with params", async () => {
+    mockReturnValue({
+      id: 123,
+      name: "John",
+    });
+
     await client.get("/entry/:id/")({
       params: { id: 123 },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/entry/:id/",
-      { id: 123 },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/entry/:id/", {
+      params: { id: 123 },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a nested patch method with a body", async () => {
@@ -177,67 +197,66 @@ describe.each([
       params: { id: 123 },
       body: { name: "John" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "patch",
-      "/entry/:id/",
-      { id: 123 },
-      undefined,
-      {
+    expect(makeRequest).toHaveBeenCalledWith("patch", "/entry/:id/", {
+      params: { id: 123 },
+      query: undefined,
+      body: {
         name: "John",
-      }
-    );
+      },
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a nested delete method", async () => {
     await client.delete("/entry/:id/")({
       params: { id: 123 },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "delete",
-      "/entry/:id/",
-      { id: 123 },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("delete", "/entry/:id/", {
+      params: { id: 123 },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a nested get method with merged params", async () => {
+    mockReturnValue({
+      fullId: "123/456",
+    });
+
     await client.get("/entry/:id/sub/:subid/")({
       params: { id: 123, subid: 456 },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/entry/:id/sub/:subid/",
-      { id: 123, subid: 456 },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/entry/:id/sub/:subid/", {
+      params: { id: 123, subid: 456 },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a call to top-level booksApi", async () => {
     await client.get("/books/:bookId")({
       params: { bookId: "123" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/books/:bookId",
-      { bookId: "123" },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/books/:bookId", {
+      params: { bookId: "123" },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a call to booksApi", async () => {
     await client.get("/other/books/:bookId")({
       params: { bookId: "123" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/other/books/:bookId",
-      { bookId: "123" },
-      undefined,
-      undefined
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/other/books/:bookId", {
+      params: { bookId: "123" },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 
   it("should make a call to booksApi in nested route", async () => {
@@ -247,9 +266,12 @@ describe.each([
     expect(makeRequest).toHaveBeenCalledWith(
       "get",
       "/entry/:id/books/:bookId",
-      { id: 123, bookId: "456" },
-      undefined,
-      undefined
+      {
+        params: { id: 123, bookId: "456" },
+        query: undefined,
+        body: undefined,
+        endpoint: expect.any(ApiEndpoint),
+      }
     );
   });
 });
