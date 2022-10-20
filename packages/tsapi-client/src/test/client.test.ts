@@ -37,7 +37,7 @@ const demoApi = defineApi((api) =>
     })
     .get("/entries", {
       query: z.object({
-        limit: z.number(),
+        limit: z.number().optional(),
         since: z.number().optional(),
       }),
       output: z.object({}),
@@ -134,6 +134,18 @@ describe.each([
     expect(makeRequest).toHaveBeenCalledWith("get", "/entries", {
       params: undefined,
       query: { limit: 5 },
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
+  });
+
+  it("should allow to omit the query if all parameters are optional", async () => {
+    mockReturnValue({});
+
+    await client.get("/entries")();
+    expect(makeRequest).toHaveBeenCalledWith("get", "/entries", {
+      params: undefined,
+      query: undefined,
       body: undefined,
       endpoint: expect.any(ApiEndpoint),
     });

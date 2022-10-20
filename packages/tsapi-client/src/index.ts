@@ -15,7 +15,7 @@ import {
   inferEndpointPathsWithMethod,
   inferEndpointQuery,
 } from "@oxc/tsapi-core/infer";
-import { HasRequiredKeys } from "type-fest";
+import { HasRequiredKeys, Simplify } from "type-fest";
 
 type Params = Record<string, string>;
 type Query = Record<string, string>;
@@ -148,13 +148,20 @@ type EndpointArgs<
   } & Omit<Args, "params" | "query" | "body" | "endpoint">
 >;
 
+type IsAllOptional<T> = undefined extends T
+  ? true
+  : Partial<T> extends T
+  ? true
+  : false;
+
 type MandatoryPropertyKeys<T> = {
-  [P in keyof T]: undefined extends T[P] ? never : P;
+  [P in keyof T]: IsAllOptional<T[P]> extends true ? never : P;
 }[keyof T];
 
 /**
- * returns a type with all properties that can be undefined marked as optional
+ * returns a type with a property of name Param and type T, which is optional IFF all properties in T are optional
  */
-type Optionalify<T> = {
+type Optionalify<T> = Simplify<{
   [P in MandatoryPropertyKeys<T>]-?: T[P];
-} & Partial<T>;
+}> &
+  Partial<T>;
