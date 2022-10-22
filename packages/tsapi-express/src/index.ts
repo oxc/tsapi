@@ -16,43 +16,43 @@ import {
   inferEndpoint,
   inferFlatApi,
   inferRoute,
-  inferEndpointBody,
-  inferEndpointOutput,
-  inferEndpointParams,
-  inferEndpointQuery,
+  inferEndpointBodyOutput,
+  inferEndpointOutputInput,
+  inferEndpointParamsOutput,
+  inferEndpointQueryOutput,
 } from "@oxc/tsapi-core/infer";
 import { IRouter, Request, RequestHandler, Response, Router } from "express";
 
 type EndpointArgs<E extends ApiEndpoint<any>> = {
   req: EndpointRequest<E>;
   res: EndpointResponse<E>;
-  params: inferEndpointParams<E>;
-  body: inferEndpointBody<E>;
-  query: inferEndpointQuery<E>;
+  params: inferEndpointParamsOutput<E>;
+  body: inferEndpointBodyOutput<E>;
+  query: inferEndpointQueryOutput<E>;
 };
 
 export type EndpointRequest<E extends ApiEndpoint<any>> = Request<
-  inferEndpointParams<E>,
-  inferEndpointOutput<E>,
-  inferEndpointBody<E>,
-  inferEndpointQuery<E>
+  inferEndpointParamsOutput<E>,
+  inferEndpointOutputInput<E>,
+  inferEndpointBodyOutput<E>,
+  inferEndpointQueryOutput<E>
 >;
 
 export type EndpointResponse<E extends ApiEndpoint<any>> = Response<
-  inferEndpointOutput<E>
+  inferEndpointOutputInput<E>
 >;
 export type EndpointHandler<E extends ApiEndpoint<any>> = (
   args: EndpointArgs<E>
-) => PromiseLike<inferEndpointOutput<E>>;
+) => PromiseLike<inferEndpointOutputInput<E>>;
 
 function createEndpointHandler<Endpoint extends ApiEndpoint<any>>(
   endpoint: Endpoint,
   handler: EndpointHandler<Endpoint>
 ): RequestHandler<
-  inferEndpointParams<Endpoint>,
-  inferEndpointOutput<Endpoint>,
-  inferEndpointBody<Endpoint>,
-  inferEndpointQuery<Endpoint>
+  inferEndpointParamsOutput<Endpoint>,
+  inferEndpointOutputInput<Endpoint>,
+  inferEndpointBodyOutput<Endpoint>,
+  inferEndpointQueryOutput<Endpoint>
 > {
   return async (req, res, next) => {
     const { params, body, query } = endpoint.options as ApiEndpointOptions;

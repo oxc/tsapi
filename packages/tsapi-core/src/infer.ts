@@ -7,8 +7,14 @@ import {
 } from "./index.js";
 import { z } from "zod";
 
-type inferZod<T> = T extends z.AnyZodObject
-  ? z.infer<T>
+type inferZodInput<T> = T extends z.ZodType
+  ? z.input<T>
+  : T extends undefined
+  ? undefined
+  : never;
+
+type inferZodOutput<T> = T extends z.ZodType
+  ? z.output<T>
   : T extends undefined
   ? undefined
   : never;
@@ -38,19 +44,33 @@ export type inferRoute<
   ? Api["routes"][Path]
   : never;
 
-type inferOptionalZodProperty<
+type inferOptionalZodInputProperty<
   E extends ApiEndpoint<any>,
   P extends keyof E["options"]
-> = P extends keyof E["options"] ? inferZod<E["options"][P]> : undefined;
+> = P extends keyof E["options"] ? inferZodInput<E["options"][P]> : undefined;
 
-export type inferEndpointParams<E extends ApiEndpoint<any>> =
-  inferOptionalZodProperty<E, "params">;
-export type inferEndpointBody<E extends ApiEndpoint<any>> =
-  inferOptionalZodProperty<E, "body">;
-export type inferEndpointQuery<E extends ApiEndpoint<any>> =
-  inferOptionalZodProperty<E, "query">;
-export type inferEndpointOutput<E extends ApiEndpoint<any>> =
-  inferOptionalZodProperty<E, "output">;
+type inferOptionalZodOutputProperty<
+  E extends ApiEndpoint<any>,
+  P extends keyof E["options"]
+> = P extends keyof E["options"] ? inferZodOutput<E["options"][P]> : undefined;
+
+export type inferEndpointParamsInput<E extends ApiEndpoint<any>> =
+  inferOptionalZodInputProperty<E, "params">;
+export type inferEndpointBodyInput<E extends ApiEndpoint<any>> =
+  inferOptionalZodInputProperty<E, "body">;
+export type inferEndpointQueryInput<E extends ApiEndpoint<any>> =
+  inferOptionalZodInputProperty<E, "query">;
+export type inferEndpointOutputInput<E extends ApiEndpoint<any>> =
+  inferOptionalZodInputProperty<E, "output">;
+
+export type inferEndpointParamsOutput<E extends ApiEndpoint<any>> =
+  inferOptionalZodOutputProperty<E, "params">;
+export type inferEndpointBodyOutput<E extends ApiEndpoint<any>> =
+  inferOptionalZodOutputProperty<E, "body">;
+export type inferEndpointQueryOutput<E extends ApiEndpoint<any>> =
+  inferOptionalZodOutputProperty<E, "query">;
+export type inferEndpointOutputOutput<E extends ApiEndpoint<any>> =
+  inferOptionalZodOutputProperty<E, "output">;
 
 export type inferEndpointPathsWithMethod<
   Api extends ApiType,

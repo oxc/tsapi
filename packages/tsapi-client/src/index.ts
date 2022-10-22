@@ -9,11 +9,11 @@ import {
 } from "@oxc/tsapi-core";
 import {
   inferEndpoint,
-  inferEndpointBody,
-  inferEndpointOutput,
-  inferEndpointParams,
+  inferEndpointBodyInput,
+  inferEndpointOutputOutput,
+  inferEndpointParamsInput,
   inferEndpointPathsWithMethod,
-  inferEndpointQuery,
+  inferEndpointQueryInput,
 } from "@oxc/tsapi-core/infer";
 import { HasRequiredKeys, Simplify } from "type-fest";
 
@@ -124,27 +124,29 @@ type SyncEndpointCaller<
   Endpoint extends ApiEndpoint<any>,
   Args extends {}
 > = HasRequiredKeys<EndpointArgs<Endpoint, Args>> extends true
-  ? (args: EndpointArgs<Endpoint, Args>) => inferEndpointOutput<Endpoint>
-  : (args?: EndpointArgs<Endpoint, Args>) => inferEndpointOutput<Endpoint>;
+  ? (args: EndpointArgs<Endpoint, Args>) => inferEndpointOutputOutput<Endpoint>
+  : (
+      args?: EndpointArgs<Endpoint, Args>
+    ) => inferEndpointOutputOutput<Endpoint>;
 type AsyncEndpointCaller<
   Endpoint extends ApiEndpoint<any>,
   Args extends {}
 > = HasRequiredKeys<EndpointArgs<Endpoint, Args>> extends true
   ? (
       args: EndpointArgs<Endpoint, Args>
-    ) => Promise<inferEndpointOutput<Endpoint>>
+    ) => Promise<inferEndpointOutputOutput<Endpoint>>
   : (
       args?: EndpointArgs<Endpoint, Args>
-    ) => Promise<inferEndpointOutput<Endpoint>>;
+    ) => Promise<inferEndpointOutputOutput<Endpoint>>;
 
 type EndpointArgs<
   Endpoint extends ApiEndpoint<any>,
   Args extends {}
 > = Optionalify<
   {
-    params: inferEndpointParams<Endpoint>;
-    query: inferEndpointQuery<Endpoint>;
-    body: inferEndpointBody<Endpoint>;
+    params: inferEndpointParamsInput<Endpoint>;
+    query: inferEndpointQueryInput<Endpoint>;
+    body: inferEndpointBodyInput<Endpoint>;
   } & Omit<Args, "params" | "query" | "body" | "endpoint">
 >;
 
