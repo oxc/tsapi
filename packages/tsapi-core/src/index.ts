@@ -56,9 +56,9 @@ export type ApiWithEndpoint<
   Path extends PathType,
   Method extends ApiEndpointMethods,
   Endpoint extends ApiEndpoint<any>
-> = Omit<Api, "endpoints"> & {
-  endpoints: Omit<Api["endpoints"], Path> & {
-    [P in Path]: Omit<Api["endpoints"][Path], Method> & {
+> = Api & {
+  endpoints: {
+    [P in Path]: {
       [M in Method]: Endpoint;
     };
   };
@@ -67,8 +67,8 @@ export type ApiWithRoute<
   Api extends ApiType,
   Path extends PathType,
   Route extends ApiDefinition<any, any>
-> = Omit<Api, "routes"> & {
-  routes: Omit<Api["routes"], Path> & {
+> = Api & {
+  routes: {
     [P in Path]: Route;
   };
 };
@@ -82,8 +82,8 @@ export type FlatApiWithRoute<
   FlatApi extends ApiType,
   Path extends PathType,
   FlatRoute extends ApiType
-> = Omit<FlatApi, "endpoints"> & {
-  endpoints: FlatApi["endpoints"] & PrefixedEndpoints<FlatRoute, Path>;
+> = FlatApi & {
+  endpoints: PrefixedEndpoints<FlatRoute, Path>;
 };
 
 type Defined<T> = T extends undefined ? never : T;
@@ -252,14 +252,17 @@ export class ApiDefinition<
       const apiEndpoint = new ApiEndpoint(options);
       const apiWithEndpoint = <A extends ApiType>(api: A) => {
         const { endpoints, ...otherProps } = api;
-        const { [path]: endpoint = {}, ...otherEndpoints } = endpoints;
-        const { [method]: existingEndpoint, ...otherMethods } = endpoint;
+        const { [path]: endpoint = {} } = endpoints;
+        const { [method]: existingEndpoint } = endpoint;
+        if (existingEndpoint) {
+          throw new Error("Endpoint already exists: ${method}(${path})");
+        }
         return {
           ...otherProps,
           endpoints: {
-            ...otherEndpoints,
+            ...endpoints,
             [path]: {
-              ...otherMethods,
+              ...endpoint,
               [method]: apiEndpoint,
             },
           },
