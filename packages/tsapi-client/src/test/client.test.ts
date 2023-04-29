@@ -1,11 +1,6 @@
 import { ApiEndpoint, defineApi } from "@oxc/tsapi-core";
 import { z } from "zod";
-import {
-  AsyncApiClient,
-  AsyncMakeRequest,
-  SyncApiClient,
-  SyncMakeRequest,
-} from "../index.js";
+import { AsyncApiClient, AsyncMakeRequest, SyncApiClient, SyncMakeRequest } from "../index.js";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const booksApi = defineApi().get("/:bookId", {
@@ -17,7 +12,7 @@ const otherApi = defineApi((api) =>
     .get("/", {
       output: z.object({ message: z.string() }),
     })
-    .route("/books", booksApi)
+    .route("/books", booksApi),
 );
 
 const demoApi = defineApi((api) =>
@@ -48,27 +43,24 @@ const demoApi = defineApi((api) =>
           body: z.object({ name: z.string() }),
           output: z.object({ id: z.number() }),
         })
-        .routeWithParams(
-          "/:id",
-          { params: z.object({ id: z.number() }) },
-          (route) =>
-            route
-              .get("/", {
-                output: z.object({ id: z.number(), name: z.string() }),
-              })
-              .patch("/", {
-                body: z.object({ name: z.string() }),
-              })
-              .delete("/", {})
-              .get("/sub/:subid/", {
-                params: z.object({ subid: z.number() }),
-                output: z.object({ fullId: z.string() }),
-              })
-              .route("/books", booksApi)
-        )
+        .routeWithParams("/:id", { params: z.object({ id: z.number() }) }, (route) =>
+          route
+            .get("/", {
+              output: z.object({ id: z.number(), name: z.string() }),
+            })
+            .patch("/", {
+              body: z.object({ name: z.string() }),
+            })
+            .delete("/", {})
+            .get("/sub/:subid/", {
+              params: z.object({ subid: z.number() }),
+              output: z.object({ fullId: z.string() }),
+            })
+            .route("/books", booksApi),
+        ),
     )
     .route("/books", booksApi)
-    .route("/other", otherApi)
+    .route("/other", otherApi),
 );
 
 const syncMakeRequest = jest.fn<SyncMakeRequest>();
@@ -275,15 +267,11 @@ describe.each([
     await client.get("/entry/:id/books/:bookId")({
       params: { id: 123, bookId: "456" },
     });
-    expect(makeRequest).toHaveBeenCalledWith(
-      "get",
-      "/entry/:id/books/:bookId",
-      {
-        params: { id: 123, bookId: "456" },
-        query: undefined,
-        body: undefined,
-        endpoint: expect.any(ApiEndpoint),
-      }
-    );
+    expect(makeRequest).toHaveBeenCalledWith("get", "/entry/:id/books/:bookId", {
+      params: { id: 123, bookId: "456" },
+      query: undefined,
+      body: undefined,
+      endpoint: expect.any(ApiEndpoint),
+    });
   });
 });

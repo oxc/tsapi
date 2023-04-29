@@ -38,16 +38,14 @@ export type EndpointRequest<E extends ApiEndpoint<any>> = Request<
   inferEndpointQueryOutput<E>
 >;
 
-export type EndpointResponse<E extends ApiEndpoint<any>> = Response<
-  inferEndpointOutputInput<E>
->;
+export type EndpointResponse<E extends ApiEndpoint<any>> = Response<inferEndpointOutputInput<E>>;
 export type EndpointHandler<E extends ApiEndpoint<any>> = (
-  args: EndpointArgs<E>
+  args: EndpointArgs<E>,
 ) => PromiseLike<inferEndpointOutputInput<E>>;
 
 function createEndpointHandler<Endpoint extends ApiEndpoint<any>>(
   endpoint: Endpoint,
-  handler: EndpointHandler<Endpoint>
+  handler: EndpointHandler<Endpoint>,
 ): RequestHandler<
   inferEndpointParamsOutput<Endpoint>,
   inferEndpointOutputInput<Endpoint>,
@@ -72,12 +70,10 @@ function createEndpointHandler<Endpoint extends ApiEndpoint<any>>(
         },
         (err) => {
           if (!err) {
-            err = new Error(
-              "returned promise was rejected but did not have a reason"
-            );
+            err = new Error("returned promise was rejected but did not have a reason");
           }
           next(err);
-        }
+        },
       );
     } catch (err) {
       next(err);
@@ -89,40 +85,29 @@ type ImplementedApiWithEndpoint<
   ImplementedApi extends ApiType,
   Api extends ApiType,
   Path extends ApiEndpointKeys<Api, Method>,
-  Method extends ApiEndpointMethods
-> = ApiWithEndpoint<
-  ImplementedApi,
-  Path,
-  Method,
-  inferEndpoint<Api, Path, Method>
->;
+  Method extends ApiEndpointMethods,
+> = ApiWithEndpoint<ImplementedApi, Path, Method, inferEndpoint<Api, Path, Method>>;
 
 type ImplementedApiWithRoute<
   ImplementedApi extends ApiType,
   Api extends ApiType,
-  Path extends ApiRouteKeys<Api>
+  Path extends ApiRouteKeys<Api>,
 > = FlatApiWithRoute<ImplementedApi, Path, inferFlatApi<inferRoute<Api, Path>>>;
 
 type EmptyImplementedApi = EmptyApiType;
-type Builder<
-  Api extends ApiType,
-  FlatApi extends ApiType,
-  ImplementedApi extends ApiType
-> = (
-  router: ApiRouter<Api, FlatApi, EmptyImplementedApi>
+type Builder<Api extends ApiType, FlatApi extends ApiType, ImplementedApi extends ApiType> = (
+  router: ApiRouter<Api, FlatApi, EmptyImplementedApi>,
 ) => ApiRouter<Api, FlatApi, ImplementedApi>;
 type BuilderOrRouter<
   Api extends ApiType,
   FlatApi extends ApiType,
-  ImplementedApi extends ApiType
-> =
-  | ApiRouter<Api, FlatApi, ImplementedApi>
-  | Builder<Api, FlatApi, ImplementedApi>;
+  ImplementedApi extends ApiType,
+> = ApiRouter<Api, FlatApi, ImplementedApi> | Builder<Api, FlatApi, ImplementedApi>;
 
 export class ApiRouter<
   Api extends ApiType,
   FlatApi extends ApiType,
-  ImplementedApi extends ApiType
+  ImplementedApi extends ApiType,
 > {
   private readonly actions: ((router: IRouter) => void)[] = [];
 
@@ -139,19 +124,17 @@ export class ApiRouter<
   delete = this.endpointFactory("delete");
 
   private endpointFactory<Method extends ApiEndpointMethods>(
-    method: Method
+    method: Method,
   ): <Path extends ApiEndpointKeys<FlatApi, Method>>(
     path: Path,
-    handler: EndpointHandler<inferEndpoint<FlatApi, Path, Method>>
-  ) => ApiRouter<
-    Api,
-    FlatApi,
-    ImplementedApiWithEndpoint<ImplementedApi, FlatApi, Path, Method>
-  > {
+    handler: EndpointHandler<inferEndpoint<FlatApi, Path, Method>>,
+  ) => ApiRouter<Api, FlatApi, ImplementedApiWithEndpoint<ImplementedApi, FlatApi, Path, Method>> {
     return (path, handler) => {
-      const endpoint = this.def.flatApi.endpoints[path][
-        method
-      ] as inferEndpoint<FlatApi, typeof path, Method>;
+      const endpoint = this.def.flatApi.endpoints[path][method] as inferEndpoint<
+        FlatApi,
+        typeof path,
+        Method
+      >;
       const requestHandler = createEndpointHandler(endpoint, handler);
       this.actions.push((router) => router[method](path, requestHandler));
       return this;
@@ -164,20 +147,14 @@ export class ApiRouter<
       inferApi<inferRoute<Api, Path>>,
       inferFlatApi<inferRoute<Api, Path>>,
       ImplementedApiWithRoute<ImplementedApi, Api, Path>
-    >
-  ): ApiRouter<
-    Api,
-    FlatApi,
-    ImplementedApiWithRoute<ImplementedApi, Api, Path>
-  > {
+    >,
+  ): ApiRouter<Api, FlatApi, ImplementedApiWithRoute<ImplementedApi, Api, Path>> {
     const api = this.def.api.routes[path] as inferRoute<Api, Path>;
     const apiRouter =
       typeof builderOrORouter === "function"
         ? builderOrORouter(new ApiRouter(api))
         : builderOrORouter;
-    this.actions.push((router) =>
-      router.use(path, apiRouter.applyTo(Router()))
-    );
+    this.actions.push((router) => router.use(path, apiRouter.applyTo(Router())));
     return this;
   }
 
@@ -193,7 +170,7 @@ export class ApiRouter<
 
 export function implementApi<Def extends ApiDefinition<any, any>>(
   api: Def,
-  builder: Builder<inferApi<Def>, inferFlatApi<Def>, inferFlatApi<Def>>
+  builder: Builder<inferApi<Def>, inferFlatApi<Def>, inferFlatApi<Def>>,
 ): ApiRouter<inferApi<Def>, inferFlatApi<Def>, inferFlatApi<Def>> {
   return builder(new ApiRouter(api));
 }

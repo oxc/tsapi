@@ -8,10 +8,7 @@ export type QueryDefinition = z.ZodType;
 export type BodyDefinition = z.ZodType;
 export type OutputDefinition = z.ZodType;
 
-type MergedParams<
-  Params1 extends ParamsDefinition,
-  Params2 extends ParamsDefinition
-> = z.ZodObject<
+type MergedParams<Params1 extends ParamsDefinition, Params2 extends ParamsDefinition> = z.ZodObject<
   z.extendShape<Params1["_def"]["shape"], ReturnType<Params2["_def"]["shape"]>>,
   Params1["_def"]["unknownKeys"],
   Params1["_def"]["catchall"]
@@ -55,7 +52,7 @@ export type ApiWithEndpoint<
   Api extends ApiType,
   Path extends PathType,
   Method extends ApiEndpointMethods,
-  Endpoint extends ApiEndpoint<any>
+  Endpoint extends ApiEndpoint<any>,
 > = Api & {
   endpoints: {
     [P in Path]: {
@@ -66,7 +63,7 @@ export type ApiWithEndpoint<
 export type ApiWithRoute<
   Api extends ApiType,
   Path extends PathType,
-  Route extends ApiDefinition<any, any>
+  Route extends ApiDefinition<any, any>,
 > = Api & {
   routes: {
     [P in Path]: Route;
@@ -74,59 +71,46 @@ export type ApiWithRoute<
 };
 
 type PrefixedEndpoints<FlatApi extends ApiType, Path extends PathType> = {
-  [P in keyof FlatApi["endpoints"] as `${Path}${P &
-    PathType}`]: FlatApi["endpoints"][P];
+  [P in keyof FlatApi["endpoints"] as `${Path}${P & PathType}`]: FlatApi["endpoints"][P];
 };
 
 export type FlatApiWithRoute<
   FlatApi extends ApiType,
   Path extends PathType,
-  FlatRoute extends ApiType
+  FlatRoute extends ApiType,
 > = FlatApi & {
   endpoints: PrefixedEndpoints<FlatRoute, Path>;
 };
 
 type Defined<T> = T extends undefined ? never : T;
 
-type MergedOptions<
-  Options extends RouteOptions,
-  EndpointOptions extends ApiEndpointOptions
-> = Omit<EndpointOptions, "params"> & {
-  params: [EndpointOptions["params"], Options["params"]] extends [
-    undefined,
-    undefined
-  ]
+type MergedOptions<Options extends RouteOptions, EndpointOptions extends ApiEndpointOptions> = Omit<
+  EndpointOptions,
+  "params"
+> & {
+  params: [EndpointOptions["params"], Options["params"]] extends [undefined, undefined]
     ? undefined
     : Options["params"] extends undefined
     ? EndpointOptions["params"]
     : EndpointOptions["params"] extends undefined
     ? Options["params"]
-    : MergedParams<
-        Defined<Options["params"]>,
-        Defined<EndpointOptions["params"]>
-      >;
+    : MergedParams<Defined<Options["params"]>, Defined<EndpointOptions["params"]>>;
 };
 
 type EndpointWithMergedOptions<
   Endpoint extends ApiEndpoint<any>,
-  Options extends RouteOptions
+  Options extends RouteOptions,
 > = Omit<Endpoint, "options"> & {
   options: MergedOptions<Options, Endpoint["options"]>;
 };
 
-type RoutesWithOptions<
-  Routes extends RoutesType,
-  Options extends RouteOptions
-> = {
+type RoutesWithOptions<Routes extends RoutesType, Options extends RouteOptions> = {
   [P in keyof Routes]: ApiDefinition<
     ApiWithOptions<inferApi<Routes[P]>, Options>,
     ApiWithOptions<inferFlatApi<Routes[P]>, Options>
   >;
 };
-type EndpointsWithOptions<
-  Endpoints extends EndpointsType,
-  Options extends RouteOptions
-> = {
+type EndpointsWithOptions<Endpoints extends EndpointsType, Options extends RouteOptions> = {
   [Path in keyof Endpoints]: {
     [Method in keyof Endpoints[Path]]: EndpointWithMergedOptions<
       Endpoints[Path][Method] & ApiEndpoint<any>,
@@ -142,10 +126,7 @@ type ApiWithOptions<Api extends ApiType, Options extends RouteOptions> = Omit<
   endpoints: EndpointsWithOptions<Api["endpoints"], Options>;
 };
 
-export type ApiEndpointKeys<
-  Api extends ApiType,
-  Method extends ApiEndpointMethods = any
-> = {
+export type ApiEndpointKeys<Api extends ApiType, Method extends ApiEndpointMethods = any> = {
   [E in keyof Api["endpoints"]]: Api["endpoints"][E] extends {
     [M in Method]: ApiEndpoint<any>;
   }
@@ -156,26 +137,20 @@ export type ApiRouteKeys<Api extends ApiType> = keyof Api["routes"] & string;
 
 type BuilderOrDefinition<Api extends ApiType, FlatApi extends ApiType> =
   | ApiDefinition<Api, FlatApi>
-  | ((
-      api: ApiDefinition<EmptyApiType, EmptyApiType>
-    ) => ApiDefinition<Api, FlatApi>);
+  | ((api: ApiDefinition<EmptyApiType, EmptyApiType>) => ApiDefinition<Api, FlatApi>);
 
 function mergeParams<P1 extends ParamsDefinition, P2 extends ParamsDefinition>(
   params1: P1,
-  params2: P2
+  params2: P2,
 ): MergedParams<P1, P2> {
   return params1.merge(params2) as MergedParams<P1, P2>;
 }
 
 abstract class BaseApiElement {
-  abstract mergeOptions<Options extends RouteOptions>(
-    options: Options
-  ): ApiElement;
+  abstract mergeOptions<Options extends RouteOptions>(options: Options): ApiElement;
 }
 
-export class ApiEndpoint<
-  Options extends ApiEndpointOptions
-> extends BaseApiElement {
+export class ApiEndpoint<Options extends ApiEndpointOptions> extends BaseApiElement {
   readonly type = "endpoint";
 
   constructor(readonly options: Options) {
@@ -184,7 +159,7 @@ export class ApiEndpoint<
   }
 
   override mergeOptions<Opts extends RouteOptions>(
-    options: Opts
+    options: Opts,
   ): ApiEndpoint<MergedOptions<Opts, Options>> {
     if (!options.params) {
       return this as unknown as ApiEndpoint<MergedOptions<Opts, Options>>;
@@ -217,10 +192,7 @@ export class ApiEndpoint<
   }
 }
 
-export class ApiDefinition<
-  Api extends ApiType,
-  FlatApi extends ApiType
-> extends BaseApiElement {
+export class ApiDefinition<Api extends ApiType, FlatApi extends ApiType> extends BaseApiElement {
   readonly type = "route";
 
   private constructor(readonly api: Api, readonly flatApi: FlatApi) {
@@ -240,10 +212,10 @@ export class ApiDefinition<
   delete = this.endpointFactory("delete");
 
   private endpointFactory<Method extends ApiEndpointMethods>(
-    method: Method
+    method: Method,
   ): <Path extends string, EP extends ApiEndpointOptions>(
     path: Path,
-    options: EP
+    options: EP,
   ) => ApiDefinition<
     ApiWithEndpoint<Api, Path, Method, ApiEndpoint<EP>>,
     ApiWithEndpoint<FlatApi, Path, Method, ApiEndpoint<EP>>
@@ -269,20 +241,13 @@ export class ApiDefinition<
         } as ApiWithEndpoint<A, typeof path, Method, typeof apiEndpoint>;
       };
 
-      return new ApiDefinition(
-        apiWithEndpoint(this.api),
-        apiWithEndpoint(this.flatApi)
-      );
+      return new ApiDefinition(apiWithEndpoint(this.api), apiWithEndpoint(this.flatApi));
     };
   }
 
-  route<
-    Path extends PathType,
-    Route extends ApiType,
-    FlatRoute extends ApiType
-  >(
+  route<Path extends PathType, Route extends ApiType, FlatRoute extends ApiType>(
     path: Path,
-    api: BuilderOrDefinition<Route, FlatRoute>
+    api: BuilderOrDefinition<Route, FlatRoute>,
   ): ApiDefinition<
     ApiWithRoute<Api, Path, ApiDefinition<Route, FlatRoute>>,
     FlatApiWithRoute<FlatApi, Path, FlatRoute>
@@ -296,19 +261,16 @@ export class ApiDefinition<
     Path extends PathType,
     Params extends RouteOptions,
     Route extends ApiType,
-    FlatRoute extends ApiType
+    FlatRoute extends ApiType,
   >(
     path: Path,
     options: Params,
-    api: BuilderOrDefinition<Route, FlatRoute>
+    api: BuilderOrDefinition<Route, FlatRoute>,
   ): ApiDefinition<
     ApiWithRoute<
       Api,
       Path,
-      ApiDefinition<
-        ApiWithOptions<Route, Params>,
-        ApiWithOptions<FlatRoute, Params>
-      >
+      ApiDefinition<ApiWithOptions<Route, Params>, ApiWithOptions<FlatRoute, Params>>
     >,
     FlatApiWithRoute<FlatApi, Path, ApiWithOptions<FlatRoute, Params>>
   > {
@@ -322,10 +284,10 @@ export class ApiDefinition<
     Path extends PathType,
     Route extends ApiType,
     FlatRoute extends ApiType,
-    RouteDefinition extends ApiDefinition<Route, FlatRoute>
+    RouteDefinition extends ApiDefinition<Route, FlatRoute>,
   >(
     path: Path,
-    route: RouteDefinition
+    route: RouteDefinition,
   ): ApiDefinition<
     ApiWithRoute<Api, Path, RouteDefinition>,
     FlatApiWithRoute<FlatApi, Path, FlatRoute>
@@ -347,7 +309,7 @@ export class ApiDefinition<
             ...prefixedApi,
             [`${path}${endpointName}`]: element,
           }),
-          {} as PrefixedEndpoints<FlatRoute, Path>
+          {} as PrefixedEndpoints<FlatRoute, Path>,
         ),
       },
     } as FlatApiWithRoute<FlatApi, Path, FlatRoute>;
@@ -357,7 +319,7 @@ export class ApiDefinition<
   private static reduce<V, I extends Record<PathType, V>, O>(
     elementsByPath: I,
     reducer: (acc: O, element: V, path: keyof I) => O,
-    initial: O
+    initial: O,
   ): O {
     return Object.keys(elementsByPath).reduce((acc, path) => {
       const element = elementsByPath[path];
@@ -366,18 +328,15 @@ export class ApiDefinition<
   }
 
   override mergeOptions<Options extends RouteOptions>(
-    options: Options
-  ): ApiDefinition<
-    ApiWithOptions<Api, Options>,
-    ApiWithOptions<FlatApi, Options>
-  > {
+    options: Options,
+  ): ApiDefinition<ApiWithOptions<Api, Options>, ApiWithOptions<FlatApi, Options>> {
     const reduceEndpoints = <E extends EndpointsType>(endpoints: E) =>
       ApiDefinition.reduce(
         endpoints,
         (
           endpointsWithOptions: EndpointsWithOptions<E, Options>,
           methodEndpoints: EndpointType,
-          path: keyof E
+          path: keyof E,
         ) => ({
           ...endpointsWithOptions,
           [path]: ApiDefinition.reduce(
@@ -386,10 +345,10 @@ export class ApiDefinition<
               ...acc,
               [method]: endpoint.mergeOptions(options),
             }),
-            {} as EndpointType
+            {} as EndpointType,
           ),
         }),
-        {} as EndpointsWithOptions<E, Options>
+        {} as EndpointsWithOptions<E, Options>,
       );
     const api = {
       ...this.api,
@@ -399,7 +358,7 @@ export class ApiDefinition<
           ...routesWithOptions,
           [path]: routes.mergeOptions(options),
         }),
-        {} as RoutesWithOptions<Api["routes"], Options>
+        {} as RoutesWithOptions<Api["routes"], Options>,
       ),
       endpoints: reduceEndpoints(this.api.endpoints),
     } as ApiWithOptions<Api, Options>;
@@ -445,12 +404,11 @@ export class ApiDefinition<
 
 export function defineApi(): ApiDefinition<EmptyApiType, EmptyApiType>;
 export function defineApi<Api extends ApiType, FlatApi extends ApiType>(
-  api: BuilderOrDefinition<Api, FlatApi>
+  api: BuilderOrDefinition<Api, FlatApi>,
 ): ApiDefinition<Simplify<Api>, Simplify<FlatApi>>;
 export function defineApi<Api extends ApiType, FlatApi extends ApiType>(
-  api?: BuilderOrDefinition<Api, FlatApi>
+  api?: BuilderOrDefinition<Api, FlatApi>,
 ): ApiDefinition<Api, FlatApi> {
-  if (api === undefined)
-    return ApiDefinition.empty() as ApiDefinition<Api, FlatApi>;
+  if (api === undefined) return ApiDefinition.empty() as ApiDefinition<Api, FlatApi>;
   return typeof api === "function" ? api(ApiDefinition.empty()) : api;
 }
