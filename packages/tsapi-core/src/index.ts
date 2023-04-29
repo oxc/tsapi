@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { inferApi, inferFlatApi } from "./infer.js";
-import { z, ZodObject } from "zod";
+import { objectUtil, z, ZodObject } from "zod";
 import { Simplify } from "type-fest";
 
 export type ParamsDefinition = z.AnyZodObject;
@@ -9,7 +9,7 @@ export type BodyDefinition = z.ZodType;
 export type OutputDefinition = z.ZodType;
 
 type MergedParams<Params1 extends ParamsDefinition, Params2 extends ParamsDefinition> = z.ZodObject<
-  z.extendShape<Params1["_def"]["shape"], ReturnType<Params2["_def"]["shape"]>>,
+  objectUtil.extendShape<Params1["_def"]["shape"], ReturnType<Params2["_def"]["shape"]>>,
   Params1["_def"]["unknownKeys"],
   Params1["_def"]["catchall"]
 >;
