@@ -63,7 +63,7 @@ function createEndpointHandler<
   return async (req, res, next) => {
     const { params, body, query } = endpoint.options as ApiEndpointOptions;
     const args = {
-      req: req,
+      req, res,
     } as EndpointArgs<any>;
     try {
       if (params) args.params = await params.parseAsync(req.params);
