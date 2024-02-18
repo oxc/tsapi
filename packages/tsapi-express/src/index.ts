@@ -14,12 +14,12 @@ import {
 import {
   inferApi,
   inferEndpoint,
-  inferFlatApi,
-  inferRoute,
   inferEndpointBodyOutput,
   inferEndpointOutputInput,
   inferEndpointParamsOutput,
   inferEndpointQueryOutput,
+  inferFlatApi,
+  inferRoute,
 } from "@oxc/tsapi-core/infer";
 import { IRouter, Request, RequestHandler, Response, Router } from "express";
 import { Middleware } from "./middleware.js";
