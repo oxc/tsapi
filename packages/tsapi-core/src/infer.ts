@@ -41,12 +41,12 @@ export type inferRoute<
 type inferOptionalZodInputProperty<
   E extends ApiEndpoint<any>,
   P extends keyof E["options"],
-> = P extends keyof E["options"] ? inferZodInput<E["options"][P]> : undefined;
+> = P extends keyof E["options"] ? inferZodInput<E["options"][P]> : void;
 
 type inferOptionalZodOutputProperty<
   E extends ApiEndpoint<any>,
   P extends keyof E["options"],
-> = P extends keyof E["options"] ? inferZodOutput<E["options"][P]> : undefined;
+> = P extends keyof E["options"] ? inferZodOutput<E["options"][P]> : void;
 
 export type inferEndpointParamsInput<E extends ApiEndpoint<any>> = inferOptionalZodInputProperty<
   E,

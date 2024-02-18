@@ -22,9 +22,11 @@ import {
   inferRoute,
 } from "@oxc/tsapi-core/infer";
 import { IRouter, Request, RequestHandler, Response, Router } from "express";
+import { EndpointResult } from "./result.js";
 import { Middleware } from "./middleware.js";
 
 export { middleware, Middleware } from "./middleware.js";
+export { EndpointResult } from "./result.js";
 
 export type EndpointArgs<E extends ApiEndpoint<any>> = {
   req: EndpointRequest<E>;
@@ -44,7 +46,7 @@ export type EndpointRequest<E extends ApiEndpoint<any>> = Request<
 export type EndpointResponse<E extends ApiEndpoint<any>> = Response<inferEndpointOutputInput<E>>;
 export type EndpointHandler<E extends ApiEndpoint<any>, ExtraArgs extends Record<string, any>> = (
   args: EndpointArgs<E> & ExtraArgs,
-) => PromiseLike<inferEndpointOutputInput<E>>;
+) => PromiseLike<inferEndpointOutputInput<E> | EndpointResult<inferEndpointOutputInput<E>>>;
 
 function createEndpointHandler<
   Endpoint extends ApiEndpoint<any>,
@@ -60,7 +62,7 @@ function createEndpointHandler<
   inferEndpointQueryOutput<Endpoint>
 > {
   return async (req, res, next) => {
-    const { params, body, query } = endpoint.options as ApiEndpointOptions;
+    const { params, body, query, output } = endpoint.options as ApiEndpointOptions;
     const args = {
       req, res,
     } as EndpointArgs<any>;
@@ -76,8 +78,8 @@ function createEndpointHandler<
         Object.assign(args, extraArgs);
       }
       handler(args as EndpointArgs<any> & ExtraArgs).then(
-        (output) => {
-          res.json(output);
+        (result) => {
+          EndpointResult.sendTo(res, result);
         },
         (err) => {
           if (!err) {
