@@ -13,11 +13,20 @@
   "scripts": {
     "format": "prettier -w .",
     "build": "yarn workspaces foreach -A --exclude=. -t -iv run build",
-    "packages:pack": "yarn workspaces foreach -A --exclude=. -t -iv pack",
+    "packages:pack": "yarn npmignore --auto && yarn workspaces foreach -A --exclude=. -t -iv pack",
     "packages:publish:provenance": "yarn workspaces foreach -A --exclude=. exec npm publish package.tgz --provenance"
   },
   "devDependencies": {
+    "npmignore": "^0.3.1",
     "prettier": "2.8.8",
     "typescript": "^5.0.4"
+  },
+  "publishConfig": {
+    "ignore": [
+      "!lib/*.js",
+      "*.config.js",
+      "src/",
+      "test/"
+    ]
   }
 }
