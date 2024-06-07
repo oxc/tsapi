@@ -11,8 +11,10 @@
     "packages/*"
   ],
   "scripts": {
+    "format": "prettier -w .",
     "build": "yarn workspaces foreach -t -v run build",
-    "format": "prettier -w ."
+    "packages:pack": "yarn workspaces foreach -A --exclude=. -v pack",
+    "packages:publish:provenance": "yarn workspaces foreach -A --exclude=. exec npm publish package.tgz --provenance"
   },
   "devDependencies": {
     "prettier": "2.8.8",
