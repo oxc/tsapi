@@ -1,6 +1,6 @@
 {
   "name": "@oxc/tsapi-express",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oxc/tsapi.git"
@@ -16,7 +16,7 @@
     "prepack": "yarn build"
   },
   "dependencies": {
-    "@oxc/tsapi-core": "^0.0.1"
+    "@oxc/tsapi-core": "^0.0.2"
   },
   "peerDependencies": {
     "express": "^4.0.0",
