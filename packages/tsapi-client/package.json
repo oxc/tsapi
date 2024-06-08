@@ -1,6 +1,6 @@
 {
   "name": "@oxc/tsapi-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oxc/tsapi.git"
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@jest/types": "^29.5.0",
-    "@oxc/tsapi-core": "^0.0.2"
+    "@oxc/tsapi-core": "^0.0.3"
   },
   "peerDependencies": {
     "zod": "^3.21.4"
