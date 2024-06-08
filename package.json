@@ -24,6 +24,7 @@
   "publishConfig": {
     "ignore": [
       "!lib/*.js",
+      "!lib/*.d.ts",
       "*.config.js",
       "src/",
       "test/"
