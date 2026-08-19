@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache .yarn/cache
         uses: actions/cache@v4
@@ -30,10 +30,14 @@ jobs:
             ${{ runner.os }}-${{ env.cache-name }}
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+
+      # trusted publishing (OIDC) requires npm >= 11.5.1
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: Enable Corepack
         run: corepack enable
@@ -47,11 +51,7 @@ jobs:
       - name: Publish with latest tag
         if: "!github.event.release.prerelease"
         run: yarn packages:publish:provenance --tag latest --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish with next tag
         if: "github.event.release.prerelease"
         run: yarn packages:publish:provenance --tag next --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
