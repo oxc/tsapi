@@ -67,12 +67,24 @@ function createEndpointHandler<
       req, res,
     } as EndpointArgs<any>;
     try {
-      if (params) args.params = await params.parseAsync(req.params);
-      if (body) args.body = await body.parseAsync(req.body);
-      if (query) args.query = await query.parseAsync(req.query);
-      req.params = args.params;
-      req.body = args.body;
-      req.query = args.query;
+      if (params) {
+        args.params = await params.parseAsync(req.params);
+        req.params = args.params;
+      }
+      if (body) {
+        args.body = await body.parseAsync(req.body);
+        req.body = args.body;
+      }
+      if (query) {
+        args.query = await query.parseAsync(req.query);
+        // express 5 exposes req.query as a getter-only property, so it cannot be assigned to
+        Object.defineProperty(req, "query", {
+          value: args.query,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      }
       if (middleware) {
         const extraArgs = await middleware(args);
         Object.assign(args, extraArgs);

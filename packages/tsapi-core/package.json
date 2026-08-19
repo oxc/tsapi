@@ -15,11 +15,11 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "zod": "^3.21.4"
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "type-fest": "^3.0.0",
-    "typescript": "^5.0.4",
-    "zod": "^3.21.4"
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
   }
 }

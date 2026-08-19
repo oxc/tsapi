@@ -6,11 +6,11 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "declaration": true,
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["es2020"],
     "target": "es2018",
     "outDir": "./dist",
-    "baseUrl": "./src"
+    "rootDir": "./src"
   }
 }

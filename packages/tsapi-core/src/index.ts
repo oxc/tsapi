@@ -1,17 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { inferApi, inferFlatApi } from "./infer.js";
-import { objectUtil, z, ZodObject } from "zod";
+import { z, ZodObject } from "zod";
 import { Simplify } from "type-fest";
 
-export type ParamsDefinition = z.AnyZodObject;
+export type ParamsDefinition = z.ZodObject<z.core.$ZodShape, z.core.$ZodObjectConfig>;
 export type QueryDefinition = z.ZodType;
 export type BodyDefinition = z.ZodType;
 export type OutputDefinition = z.ZodType;
 
 type MergedParams<Params1 extends ParamsDefinition, Params2 extends ParamsDefinition> = z.ZodObject<
-  objectUtil.extendShape<Params1["_def"]["shape"], ReturnType<Params2["_def"]["shape"]>>,
-  Params1["_def"]["unknownKeys"],
-  Params1["_def"]["catchall"]
+  z.core.util.Extend<Params1["shape"], Params2["shape"]>,
+  Params1["_zod"]["config"]
 >;
 
 export type RouteOptions = {
@@ -143,7 +142,7 @@ function mergeParams<P1 extends ParamsDefinition, P2 extends ParamsDefinition>(
   params1: P1,
   params2: P2,
 ): MergedParams<P1, P2> {
-  return params1.merge(params2) as MergedParams<P1, P2>;
+  return params1.extend(params2.shape) as unknown as MergedParams<P1, P2>;
 }
 
 abstract class BaseApiElement {
@@ -175,9 +174,9 @@ export class ApiEndpoint<Options extends ApiEndpointOptions> extends BaseApiElem
   }
 
   dumpObj(): any {
-    const dumpZod = (zod: z.AnyZodObject): any =>
+    const dumpZod = (zod: ParamsDefinition): any =>
       Object.entries(zod.shape).reduce((acc, [key, def]) => {
-        acc[key] = (def as any)._def.typeName;
+        acc[key] = (def as any)._zod.def.type;
         return acc;
       }, {} as any);
 
