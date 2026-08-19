@@ -14,7 +14,7 @@
     "format": "prettier -w .",
     "build": "yarn workspaces foreach -A --exclude=. -t -iv run build",
     "packages:pack": "yarn npmignore --auto && yarn workspaces foreach -A --exclude=. -t -iv pack",
-    "packages:publish:provenance": "yarn workspaces foreach -A --exclude=. exec npm publish package.tgz --provenance"
+    "packages:publish:provenance": "yarn workspaces foreach -A --exclude=. exec npm publish --provenance"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
