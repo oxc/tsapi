@@ -36,11 +36,13 @@ export type EndpointArgs<E extends ApiEndpoint<any>> = {
   query: inferEndpointQueryOutput<E>;
 };
 
+// the query is not typed here: express 5 exposes req.query as a getter, so it
+// keeps holding the raw values. The parsed query is passed to the handler as
+// EndpointArgs["query"] instead.
 export type EndpointRequest<E extends ApiEndpoint<any>> = Request<
   inferEndpointParamsOutput<E>,
   inferEndpointOutputInput<E>,
-  inferEndpointBodyOutput<E>,
-  inferEndpointQueryOutput<E>
+  inferEndpointBodyOutput<E>
 >;
 
 export type EndpointResponse<E extends ApiEndpoint<any>> = Response<inferEndpointOutputInput<E>>;
@@ -58,8 +60,7 @@ function createEndpointHandler<
 ): RequestHandler<
   inferEndpointParamsOutput<Endpoint>,
   inferEndpointOutputInput<Endpoint>,
-  inferEndpointBodyOutput<Endpoint>,
-  inferEndpointQueryOutput<Endpoint>
+  inferEndpointBodyOutput<Endpoint>
 > {
   return async (req, res, next) => {
     const { params, body, query, output } = endpoint.options as ApiEndpointOptions;
@@ -75,16 +76,7 @@ function createEndpointHandler<
         args.body = await body.parseAsync(req.body);
         req.body = args.body;
       }
-      if (query) {
-        args.query = await query.parseAsync(req.query);
-        // express 5 exposes req.query as a getter-only property, so it cannot be assigned to
-        Object.defineProperty(req, "query", {
-          value: args.query,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        });
-      }
+      if (query) args.query = await query.parseAsync(req.query);
       if (middleware) {
         const extraArgs = await middleware(args);
         Object.assign(args, extraArgs);
