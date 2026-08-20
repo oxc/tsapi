@@ -12,13 +12,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepack": "yarn build"
+    "prepack": "pnpm build"
   },
   "peerDependencies": {
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "type-fest": "^3.0.0",
+    "type-fest": "^5.8.0",
     "typescript": "^5.9.3",
     "zod": "^4.4.3"
   }

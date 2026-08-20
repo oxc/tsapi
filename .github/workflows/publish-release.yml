@@ -21,46 +21,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Cache .yarn/cache
-        uses: actions/cache@v6
-        env:
-          cache-name: yarn-cache
-        with:
-          path: .yarn/cache
-          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.cache-name }}
+      - name: Enable Corepack
+        run: corepack enable pnpm
 
       # no registry-url on purpose: it writes an .npmrc _authToken line that
-      # expands to the empty string without NODE_AUTH_TOKEN, which makes npm
-      # attempt token auth instead of the OIDC exchange
+      # expands to the empty string without NODE_AUTH_TOKEN, which stops the
+      # trusted publishing (OIDC) token exchange from being attempted
       - name: Use Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '24'
-
-      # only yarn, so the corepack shims cannot shadow the npm installed below
-      - name: Enable Corepack
-        run: corepack enable yarn
-
-      # trusted publishing (OIDC) requires npm >= 11.5.1
-      - name: Update npm
-        run: |
-          npm install -g npm@latest
-          node --version
-          npm --version
-          command -v npm
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Generate archives
-        run: yarn packages:pack
+        run: pnpm install --frozen-lockfile
 
       - name: Publish with latest tag
         if: "!github.event.release.prerelease"
-        run: yarn packages:publish:provenance --tag latest --access public
+        run: pnpm packages:publish --tag latest --access public
 
       - name: Publish with next tag
         if: "github.event.release.prerelease"
-        run: yarn packages:publish:provenance --tag next --access public
+        run: pnpm packages:publish --tag next --access public

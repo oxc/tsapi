@@ -13,10 +13,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepack": "yarn build"
+    "prepack": "pnpm build"
   },
   "dependencies": {
-    "@oxc/tsapi-core": "^0.1.0"
+    "@oxc/tsapi-core": "workspace:^"
   },
   "peerDependencies": {
     "express": "^5.0.0",

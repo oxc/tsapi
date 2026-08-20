@@ -5,16 +5,13 @@
     "type": "git",
     "url": "git+https://github.com/oxc/tsapi.git"
   },
-  "packageManager": "yarn@4.2.2+sha256.1aa43a5304405be7a7cb9cb5de7b97de9c4e8ddd3273e4dad00d6ae3eb39f0ef",
+  "packageManager": "pnpm@11.22.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "format": "prettier -w .",
-    "build": "yarn workspaces foreach -A --exclude=. -t -iv run build",
-    "packages:pack": "yarn npmignore --auto && yarn workspaces foreach -A --exclude=. -t -iv pack",
-    "packages:publish:provenance": "yarn workspaces foreach -A --exclude=. exec npm publish --provenance"
+    "build": "pnpm -r build",
+    "packages:pack": "pnpm npmignore --auto && pnpm --filter \"./packages/*\" exec pnpm pack",
+    "packages:publish": "pnpm npmignore --auto && pnpm -r publish --no-git-checks"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
