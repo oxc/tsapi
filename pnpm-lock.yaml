@@ -23,9 +23,6 @@ importers:
 
   packages/tsapi-client:
     dependencies:
-      '@jest/types':
-        specifier: ^29.5.0
-        version: 29.6.3
       '@oxc/tsapi-core':
         specifier: workspace:^
         version: link:../tsapi-core

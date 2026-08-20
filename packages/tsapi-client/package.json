@@ -17,7 +17,6 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@jest/types": "^29.5.0",
     "@oxc/tsapi-core": "workspace:^"
   },
   "peerDependencies": {
