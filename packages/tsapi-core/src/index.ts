@@ -1,17 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { inferApi, inferFlatApi } from "./infer.js";
-import { z, ZodObject } from "zod";
+// zod's core rather than its classic API: everything here works on the schemas of both classic
+// `zod` and `zod/mini`, and importing classic would pull all of it into a bundle that uses mini
+import * as z from "zod/v4/core";
 import { Simplify } from "type-fest";
 
-export type ParamsDefinition = z.ZodObject<z.core.$ZodShape, z.core.$ZodObjectConfig>;
-export type QueryDefinition = z.ZodType;
-export type BodyDefinition = z.ZodType;
-export type OutputDefinition = z.ZodType;
+export type ParamsDefinition = z.$ZodObject<z.$ZodShape, z.$ZodObjectConfig>;
+export type QueryDefinition = z.$ZodType;
+export type BodyDefinition = z.$ZodType;
+export type OutputDefinition = z.$ZodType;
 
-type MergedParams<Params1 extends ParamsDefinition, Params2 extends ParamsDefinition> = z.ZodObject<
-  z.core.util.Extend<Params1["shape"], Params2["shape"]>,
-  Params1["_zod"]["config"]
->;
+type ShapeOf<Params extends ParamsDefinition> = Params["_zod"]["def"]["shape"];
+
+type MergedParams<
+  Params1 extends ParamsDefinition,
+  Params2 extends ParamsDefinition,
+> = z.$ZodObject<z.util.Extend<ShapeOf<Params1>, ShapeOf<Params2>>, Params1["_zod"]["config"]>;
 
 export type RouteOptions = {
   params?: ParamsDefinition;
@@ -142,7 +146,8 @@ function mergeParams<P1 extends ParamsDefinition, P2 extends ParamsDefinition>(
   params1: P1,
   params2: P2,
 ): MergedParams<P1, P2> {
-  return params1.extend(params2.shape) as unknown as MergedParams<P1, P2>;
+  // keeps the class of params1, so a classic schema stays classic and a mini one stays mini
+  return z.util.extend(params1, params2._zod.def.shape) as MergedParams<P1, P2>;
 }
 
 abstract class BaseApiElement {
@@ -175,7 +180,7 @@ export class ApiEndpoint<Options extends ApiEndpointOptions> extends BaseApiElem
 
   dumpObj(): any {
     const dumpZod = (zod: ParamsDefinition): any =>
-      Object.entries(zod.shape).reduce((acc, [key, def]) => {
+      Object.entries(zod._zod.def.shape).reduce((acc, [key, def]) => {
         acc[key] = (def as any)._zod.def.type;
         return acc;
       }, {} as any);
@@ -183,7 +188,7 @@ export class ApiEndpoint<Options extends ApiEndpointOptions> extends BaseApiElem
     const result: any = {};
     Object.keys(this.options).forEach((key) => {
       const value = this.options[key as keyof Options];
-      if (value && value instanceof ZodObject) {
+      if (value && value instanceof z.$ZodObject) {
         result[key] = dumpZod(value);
       }
     });

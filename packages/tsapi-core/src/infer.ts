@@ -1,10 +1,10 @@
 /* eslint-disable */
 import { ApiDefinition, ApiEndpoint, ApiEndpointMethods, ApiType } from "./index.js";
-import { z } from "zod";
+import * as z from "zod/v4/core";
 
-type inferZodInput<T> = T extends z.ZodType ? z.input<T> : T extends undefined ? undefined : never;
+type inferZodInput<T> = T extends z.$ZodType ? z.input<T> : T extends undefined ? undefined : never;
 
-type inferZodOutput<T> = T extends z.ZodType
+type inferZodOutput<T> = T extends z.$ZodType
   ? z.output<T>
   : T extends undefined
   ? undefined

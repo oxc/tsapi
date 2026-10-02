@@ -11,6 +11,7 @@ import {
   EmptyApiType,
   FlatApiWithRoute,
 } from "@oxc/tsapi-core";
+import * as z from "zod/v4/core";
 import {
   inferApi,
   inferEndpoint,
@@ -65,18 +66,19 @@ function createEndpointHandler<
   return async (req, res, next) => {
     const { params, body, query, output } = endpoint.options as ApiEndpointOptions;
     const args = {
-      req, res,
+      req,
+      res,
     } as EndpointArgs<any>;
     try {
       if (params) {
-        args.params = await params.parseAsync(req.params);
+        args.params = await z.parseAsync(params, req.params);
         req.params = args.params;
       }
       if (body) {
-        args.body = await body.parseAsync(req.body);
+        args.body = await z.parseAsync(body, req.body);
         req.body = args.body;
       }
-      if (query) args.query = await query.parseAsync(req.query);
+      if (query) args.query = await z.parseAsync(query, req.query);
       if (middleware) {
         const extraArgs = await middleware(args);
         Object.assign(args, extraArgs);
@@ -241,4 +243,3 @@ export function implementApi<
   }
   return builder(new ApiRouter(api, middleware));
 }
-

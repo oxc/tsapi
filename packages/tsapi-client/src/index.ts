@@ -7,6 +7,7 @@ import {
   ApiType,
   OutputDefinition,
 } from "@oxc/tsapi-core";
+import * as z from "zod/v4/core";
 import {
   inferEndpoint,
   inferEndpointBodyInput,
@@ -71,7 +72,7 @@ export class SyncApiClient<FlatApi extends ApiType, Args extends {}> {
           endpoint,
         } as any);
         if (outputValidator) {
-          return outputValidator.parse(result);
+          return z.parse(outputValidator, result);
         }
       }) as any;
     };
@@ -109,7 +110,7 @@ export class AsyncApiClient<FlatApi extends ApiType, Args extends {}> {
           endpoint,
         } as any);
         if (outputValidator) {
-          return await outputValidator.parseAsync(result);
+          return await z.parseAsync(outputValidator, result);
         }
       }) as any;
     };
